@@ -18,8 +18,6 @@ from tqdm import tqdm
 from geopy.geocoders import Nominatim
 from itertools import zip_longest
 
-
-
 # - * - coding: utf - 8 - * -
 
 # ---------------------------------------------------------------------
@@ -44,32 +42,69 @@ with open('1000stars_data.csv', newline='') as csvfile:
             column_name = header[idx]  # Get the corresponding column name
             data[column_name].append(item)
 
+def dms_to_decimal(dms_str):
+    # Split the string into degrees, minutes, seconds, and direction
+    degrees, minutes, seconds = map(float, dms_str[:-1].split(' '))
 
+    # Extract direction
+    direction = dms_str[-1]
 
-#date_str = input('Enter observation date in YYYY-MM-DD: ')
-date_str = "2024-02-27"
+    # Calculate the decimal degrees
+    decimal_degrees = degrees + (minutes / 60.0) + (seconds / 3600.0)
 
-#lat = input("Latitude (DD): ")
-#lon = input("Longitude (DD): ")
-#height = input("Height (m above sea level, leave empty for no height): ")
-lat=47.3769*u.deg
-lon=8.5417*u.deg
-height=0*u.m
+    # Adjust for negative values if direction is South or West
+    if direction in ['S', 'W']:
+        decimal_degrees *= -1
 
-if height is None:
-    height = 0*u.m
+    return decimal_degrees
+
+# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+
+# Input date and location (either in degrees or decimal values, choose which input to use)
+
+date_str = "2024-05-22"
+
+utc_offset = 0
+
+height = 2381.25 * u.m
+
+lat_deg = "28 17 58.8N"
+lon_deg = "16 30 39.7E"
+
+lat_deg_to_dec = dms_to_decimal(lat_deg)
+lon_deg_to_dec = dms_to_decimal(lon_deg)
+
+lat_dec = 47.3769 * u.deg
+lon_dec = 8.5417 * u.deg
+
+loc_input = 'deg'
+
+if loc_input == 'dec':
+    lat = lat_dec
+    lon = lon_dec
+if loc_input == 'deg':
+    lat = lat_deg_to_dec
+    lon = lon_deg_to_dec
+
+# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 # Parse the input string into a datetime object
 date_obj = datetime.strptime(date_str, '%Y-%m-%d')
 
 # Convert the date object to a Julian date
-utc_offset = 1
-date_JD = date_obj.toordinal() + 1721425 + .33333 - (1/24)*utc_offset # added 1/3 such since observations will most likely start at 8pm + offset of timezone
+date_JD = date_obj.toordinal() + 1721425 + .33333 - (
+            1 / 24) * utc_offset  # added 1/3 since observations will most likely start at 8pm + offset of timezone
 
 # Create a Time object from the observation time in Julian date
 observation_time_utc = Time(date_JD, format='jd')
-print('Enter observation site coordinates ')
 
+# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+
+
+# Extract stars which are visible on the night of observation
 RA = []
 for star in data["RA_decimal"]:
     RA.append(star)
@@ -103,7 +138,8 @@ for equatorial_coord in tqdm(equatorial_coords[:number_of_stars]):
     # Calculate altitude and azimuth for each time point
     times = start_time + (end_time - start_time) * np.linspace(0, 1, 97)[:, None]
     for time in times:
-        altaz_coords = equatorial_coord.transform_to(AltAz(obstime=time, location=EarthLocation(lat=lat, lon=lon, height=height)))
+        altaz_coords = equatorial_coord.transform_to(
+            AltAz(obstime=time, location=EarthLocation(lat=lat, lon=lon, height=height)))
         altitude = altaz_coords.alt
         azimuth = altaz_coords.az
         altitudes.append(altitude)
@@ -134,14 +170,15 @@ for star_idx, altitudes in tqdm(enumerate(altitudes_per_star)):
         for key in data.keys():
             extracted_data[key].append(data[key][star_idx])
 
-print("Out of the ", number_of_stars," analysed, ", len(extracted_data[next(iter(data.keys()))])," are visible throughout the night.")
+print("Out of the ", number_of_stars, " analysed, ", len(extracted_data[next(iter(data.keys()))]),
+      " are visible throughout the night.")
 list_1_print = input("Print list of those? (y or n) ")
 if list_1_print == "y":
     print(extracted_data)
 
 list_1_save = input("Save as .csv? (y or n) ")
 if list_1_save == "y":
-    output_file = 'stars_visible_'+date_str+'.csv'
+    output_file = 'stars_visible_' + date_str + '.csv'
 
     # Write the extracted data to the CSV file
     with open(output_file, 'w', newline='') as csvfile:
@@ -160,10 +197,12 @@ if list_1_save == "y":
             writer.writerow(row_data)
     print("Saved as", output_file)
 
+# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
-
+# In case one would like to extract all the stars by magnitude
 magnitude = "n"
-"""
+
 magnitude = input("Do you want to specify the apparent magnitude (V) of the star? ")
 if magnitude == "y":
     magnitude_threshold = float(input("Apparent magnitude threshold <= "))
@@ -180,7 +219,13 @@ if magnitude == "y":
             for key in extracted_data.keys():
                 extracted_data2[key].append(data[key][star])
 
-    print("Out of the ", number_of_stars," analysed, ", len(extracted_data2[next(iter(data.keys()))])," are visible throughout the night and have and apparent magnitude <= ", magnitude_threshold)
+    print("Out of the ", number_of_stars," analysed, ", len(extracted_data2[next(iter(data.keys()))]),"are visible "
+                                                                                                      "throughout the "
+                                                                                                      "night and have "
+                                                                                                      "and apparent "
+                                                                                                      "magnitude <= "
+                                                                                                      "",
+          magnitude_threshold)
     list_2_print = input("Print list of those? (y or n) ")
     if list_2_print == "y":
         print(extracted_data2)
@@ -206,10 +251,12 @@ if magnitude == "y":
                 writer.writerow(row_data)
         print("Saved as", output_file)
     extracted_data = extracted_data2
-"""
 
 
+# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
+# In case one would like to extract stars by estimated diameter
 diameter_choice = input("Do you want to specify the diameter in mas of the star? ")
 
 if diameter_choice == "y":
@@ -221,8 +268,9 @@ if diameter_choice == "y":
         extracted_data3[key] = []
 
     # Loop over each star's Vmag and check against the threshold
-    for idx, (diam_V, diam_B, diam_U) in enumerate(zip_longest(extracted_data["Diameter_V"], extracted_data["Diameter_B"],
-                                                    extracted_data["Diameter_U"])):
+    for idx, (diam_V, diam_B, diam_U) in enumerate(
+            zip_longest(extracted_data["Diameter_V"], extracted_data["Diameter_B"],
+                        extracted_data["Diameter_U"])):
         # Convert diameters to float, handling empty strings
         diam_V = float(diam_V) if diam_V else None
         diam_B = float(diam_B) if diam_B else None
@@ -238,11 +286,13 @@ if diameter_choice == "y":
             for key in data.keys():
                 extracted_data3[key].append(extracted_data[key][idx])
 
-
     if magnitude == "y":
-        print("Out of the ", number_of_stars," analysed, ", len(extracted_data3[next(iter(data.keys()))])," are visible throughout the night and have and apparent magnitude <= ", magnitude_threshold, "and a diameter of around ", diameter_threshold, " mas.")
+        print("Out of the ", number_of_stars, " analysed, ", len(extracted_data3[next(iter(data.keys()))]),
+              " are visible throughout the night and have and apparent magnitude <= ", magnitude_threshold,
+              "and a diameter of around ", diameter_threshold, " mas.")
     else:
-        print("Out of the ", number_of_stars, " analysed, ", len(extracted_data3[next(iter(data.keys()))])," are visible throughout the night and have a diameter of around ", diameter_threshold, " mas.")
+        print("Out of the ", number_of_stars, " analysed, ", len(extracted_data3[next(iter(data.keys()))]),
+              " are visible throughout the night and have a diameter of around ", diameter_threshold, " mas.")
     list_3_print = input("Print list of those? (y or n) ")
     if list_3_print == "y":
         print(extracted_data3)
@@ -250,9 +300,9 @@ if diameter_choice == "y":
     list_3_save = input("Save as .csv? (y or n) ")
     if list_3_save == "y":
         if magnitude == "y":
-            output_file = 'stars_visible_bright_big_'+date_str+'.csv'
+            output_file = 'stars_visible_bright_big_' + date_str + '.csv'
         else:
-            output_file = 'stars_visible_big_'+date_str+'.csv'
+            output_file = 'stars_visible_big_' + date_str + '.csv'
 
         # Write the extracted data to the CSV file
         with open(output_file, 'w', newline='') as csvfile:
