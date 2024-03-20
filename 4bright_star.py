@@ -13,6 +13,8 @@ from datetime import date, datetime
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
+from scipy.special import j1, j0
+
 
 
 # - * - coding: utf - 8 - * -
@@ -48,6 +50,11 @@ def calculate_covered_area(U, V):
     area = hull.volume if len(U) > 2 else 0
 
     return area
+
+def intensity(b, theta, lambda_):
+    input = np.pi * b * theta / lambda_
+    B_1 = j1(input)
+    return B_1
 
 
 date_str = "2024-05-22"
@@ -181,6 +188,16 @@ U = []
 V = []
 W = []
 
+
+# Create a grid of points
+resolution = 300
+size_to_plot = 100
+x = np.linspace(-size_to_plot, size_to_plot, resolution)
+y = np.linspace(-size_to_plot, size_to_plot, resolution)
+X, Y = np.meshgrid(x, y)
+R = np.sqrt(X**2 + Y**2)
+
+
 for time in times:
     HA_value = RA_2_HA(given_ra_decimal, time.jd)
     matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat * u.deg))
@@ -194,8 +211,15 @@ for time in times:
     V.append(UVW_plane[1][0])  # Append the first element of the second dimension
     W.append(UVW_plane[2][0])  # Append the first element of the third dimension
 
+resolution = 300
+diameter = 0.01
+diameter_in_rad = diameter*np.pi/(3600*180)
+diameter_mas = diameter*1000
+wavelength = (5.4e-7) # wavelength in meters
+wavelength_nm = wavelength *10**9
 A = calculate_covered_area(U, V)
-
+intensity_values = intensity(R, diameter_in_rad, wavelength)
+plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
 plt.plot(U, V, '.')
 plt.gca().set_aspect('equal')
 plt.show()

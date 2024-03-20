@@ -185,6 +185,10 @@ Dec = []
 for star in data["Dec_decimal"]:
     Dec.append(star)
 
+diameter_V = []
+for star in data["Diameter_V"]:
+    diameter_V.append(star)
+
 equatorial_coords = []
 for i in range(len(data["RA_decimal"])):
     coord = SkyCoord(RA[i], Dec[i], unit=(u.hourangle, u.deg), frame='icrs')
@@ -200,13 +204,22 @@ n = len(equatorial_coords)
 
 
 
-
+# Create a grid of points
+resolution = 300
+size_to_plot = 100
+x = np.linspace(-size_to_plot, size_to_plot, resolution)
+y = np.linspace(-size_to_plot, size_to_plot, resolution)
+X, Y = np.meshgrid(x, y)
+R = np.sqrt(X**2 + Y**2)
 
 
 for i in tqdm(range(0, n)):
     # Get RA and Dec for the current star using its index i
     given_ra_decimal = float(RA[i])
     given_dec_decimal = float(Dec[i])
+    current_diameter_V = float(diameter_V[i][0])
+    diameter_in_rad = current_diameter_V/1000 * np.pi / (3600 * 180)
+    wavelength = 540*10**-9
     U = []
     V = []
     W = []
@@ -235,15 +248,17 @@ for i in tqdm(range(0, n)):
     plt.plot(U, V, '.')
     plt.gca().set_aspect('equal')
     plt.title(data['BayerF'][i])
-    intensity_values = intensity(R, diameter, wavelength)
+    intensity_values = intensity(R, diameter_in_rad, wavelength)
+    plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
 
-    # plt.show()
+    plt.show()
     A = calculate_covered_area(U, V)
 
     U_per_star.append(U)
     V_per_star.append(V)
     W_per_star.append(W)
     covered_area.append(A)
+    plt.clf()
 
 
 
