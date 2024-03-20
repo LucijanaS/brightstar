@@ -12,28 +12,56 @@ from astropy.time import Time, TimeDelta
 from datetime import date, datetime
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from scipy.spatial import ConvexHull
+
 
 # - * - coding: utf - 8 - * -
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
+def dms_to_decimal(dms_str):
+    # Split the string into degrees, minutes, seconds, and direction
+    degrees, minutes, seconds = map(float, dms_str[:-1].split(' '))
 
-# date_str = input('Enter observation date in YYYY-MM-DD: ')
-date_str = "2024-02-27"
+    # Extract direction
+    direction = dms_str[-1]
 
-# lat = input("Latitude (DD): ")
-# lon = input("Longitude (DD): ")
-# height = input("Height (m above sea level, leave empty for no height): ")
-lat = 47.3769 * u.deg
-lat_ = 47.3769
-lon = 8.5417 * u.deg
-lon_ = 8.5417
-height = 0 * u.m
-height_ = 0
-if height is None:
-    height = 0 * u.m
+    # Calculate the decimal degrees
+    decimal_degrees = degrees + (minutes / 60.0) + (seconds / 3600.0)
+
+    # Adjust for negative values if direction is South or West
+    if direction in ['S', 'W']:
+        decimal_degrees *= -1
+
+    return decimal_degrees
+
+
+def calculate_covered_area(U, V):
+    # Combine U and V coordinates into a single array
+    points = np.column_stack((U, V))
+
+    # Calculate the convex hull of the points
+    hull = ConvexHull(points)
+
+    # Calculate the area of the convex hull
+    area = hull.volume if len(U) > 2 else 0
+
+    return area
+
+
+date_str = "2024-05-22"
+
+utc_offset = 0
+
+lat_deg = "28 17 58.8N"  # Telescopio Carlos Sanchez
+lon_deg = "16 30 39.7E"
+
+lat = dms_to_decimal(lat_deg)
+lon = dms_to_decimal(lon_deg)
+
+height = 2381.25 * u.m
+
 
 # Parse the input string into a datetime object
 date_obj = datetime.strptime(date_str, '%Y-%m-%d')
@@ -47,8 +75,8 @@ date_JD = date_obj.toordinal() + 1721425 + .33333 - (
 observation_time_utc = Time(date_JD, format='jd')
 
 # Given RA and Dec
-given_ra = "00h 05m 09s"
-given_dec = "+45° 13′ 45″"
+given_ra = "13h 25m 11.6s"
+given_dec = "-11° 09′ 41″"
 
 
 # Convert given RA and Dec to the format in the JSON data for comparison
@@ -69,6 +97,7 @@ def convert_ra_dec(ra_str, dec_str):
 
 
 given_ra_decimal, given_dec_decimal = convert_ra_dec(given_ra, given_dec)
+
 
 equatorial_coords = SkyCoord(given_ra_decimal, given_dec_decimal, unit=(u.hourangle, u.deg), frame='icrs')
 
@@ -94,7 +123,6 @@ for time in times:
 # Convert lists to arrays
 altitudes = np.array(altitudes)
 azimuths = np.array(azimuths)
-print(azimuths)
 azimuths_flat = azimuths.flatten()
 datetime_objects = [Time(time[0]).to_datetime() for time in times]
 
@@ -102,7 +130,7 @@ datetime_objects = [Time(time[0]).to_datetime() for time in times]
 time_components = [dt.time().strftime('%H:%M') for dt in datetime_objects]
 
 # Plot the trail
-plt.scatter(time_components, altitudes, c=azimuths_flat, cmap='ocean')
+plt.scatter(time_components, altitudes, c=azimuths_flat)
 plt.colorbar(label='Azimuth [°]')  # Add color bar indicating azimuth
 plt.xticks(time_components[::16], rotation=0)
 plt.title('Star Trail')
@@ -155,41 +183,19 @@ W = []
 
 for time in times:
     HA_value = RA_2_HA(given_ra_decimal, time.jd)
-    print(HA_value)
-    matrices = R_x(given_dec_decimal*u.deg).dot(R_y(HA_value*u.deg)).dot(R_x(-lat_*u.deg))
-    #matrices = R_y(HA_value).dot(R_x(-lat_))
-    diff = 40
-    h_plane = np.array([[diff], [diff], [0]])
+    matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat * u.deg))
+    diff_N = -92.5
+    diff_E = -13
+    diff_H = 5.5
+    h_plane = np.array([[diff_N], [diff_E], [diff_H]])
     UVW_plane = matrices.dot(h_plane)
 
     U.append(UVW_plane[0][0])  # Append the first element of the first dimension
     V.append(UVW_plane[1][0])  # Append the first element of the second dimension
     W.append(UVW_plane[2][0])  # Append the first element of the third dimension
 
+A = calculate_covered_area(U, V)
 
 plt.plot(U, V, '.')
 plt.gca().set_aspect('equal')
-plt.show()
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-# Plot the vectors
-origin = [0, 0, 0]  # Origin point
-
-
-for i in range(5):
-    ax.quiver(*origin, U[i], V[i], W[i])
-
-# Set plot labels and title
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.set_title('3D Vector Plot')
-
-# Set plot limits
-ax.set_xlim([min(U), max(U)])
-ax.set_ylim([min(V), max(V)])
-ax.set_zlim([min(W), max(W)])
-
-# Show the plot
 plt.show()

@@ -42,6 +42,7 @@ with open('1000stars_data.csv', newline='') as csvfile:
             column_name = header[idx]  # Get the corresponding column name
             data[column_name].append(item)
 
+
 def dms_to_decimal(dms_str):
     # Split the string into degrees, minutes, seconds, and direction
     degrees, minutes, seconds = map(float, dms_str[:-1].split(' '))
@@ -58,6 +59,7 @@ def dms_to_decimal(dms_str):
 
     return decimal_degrees
 
+
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
@@ -69,7 +71,7 @@ utc_offset = 0
 
 height = 2381.25 * u.m
 
-lat_deg = "28 17 58.8N"
+lat_deg = "28 17 58.8N"  # Telescopio Carlos Sanchez
 lon_deg = "16 30 39.7E"
 
 lat_deg_to_dec = dms_to_decimal(lat_deg)
@@ -95,7 +97,7 @@ date_obj = datetime.strptime(date_str, '%Y-%m-%d')
 
 # Convert the date object to a Julian date
 date_JD = date_obj.toordinal() + 1721425 + .33333 - (
-            1 / 24) * utc_offset  # added 1/3 since observations will most likely start at 8pm + offset of timezone
+        1 / 24) * utc_offset  # added 1/3 since observations will most likely start at 8pm + offset of timezone
 
 # Create a Time object from the observation time in Julian date
 observation_time_utc = Time(date_JD, format='jd')
@@ -123,7 +125,7 @@ altitudes_per_star = []
 azimuths_per_star = []
 
 # Iterate over each equatorial coordinate
-number_of_stars = 50
+number_of_stars = 1000
 for equatorial_coord in tqdm(equatorial_coords[:number_of_stars]):
     # Initialize lists to store altitude and azimuth values for the current star
     altitudes = []
@@ -161,11 +163,7 @@ for star_idx, altitudes in tqdm(enumerate(altitudes_per_star)):
     low_altitude_count = sum(altitude.value < altitude_threshold for altitude in altitudes)
 
     # Check if more than 1/4 of the entries have altitudes less than the threshold
-    if low_altitude_count > len(altitudes) / 4:
-        # Remove corresponding entries for the star from altitudes_per_star and azimuths_per_star
-        del altitudes_per_star[star_idx]
-        del azimuths_per_star[star_idx]
-
+    if low_altitude_count < len(altitudes) / 4:
         # Remove corresponding entries from the data dictionary for the star
         for key in data.keys():
             extracted_data[key].append(data[key][star_idx])
@@ -219,12 +217,12 @@ if magnitude == "y":
             for key in extracted_data.keys():
                 extracted_data2[key].append(data[key][star])
 
-    print("Out of the ", number_of_stars," analysed, ", len(extracted_data2[next(iter(data.keys()))]),"are visible "
-                                                                                                      "throughout the "
-                                                                                                      "night and have "
-                                                                                                      "and apparent "
-                                                                                                      "magnitude <= "
-                                                                                                      "",
+    print("Out of the ", number_of_stars, " analysed, ", len(extracted_data2[next(iter(data.keys()))]), "are visible "
+                                                                                                        "throughout the "
+                                                                                                        "night and have "
+                                                                                                        "and apparent "
+                                                                                                        "magnitude <= "
+                                                                                                        "",
           magnitude_threshold)
     list_2_print = input("Print list of those? (y or n) ")
     if list_2_print == "y":
@@ -232,7 +230,7 @@ if magnitude == "y":
 
     list_2_save = input("Save as .csv? (y or n) ")
     if list_2_save == "y":
-        output_file = 'stars_visible_bright_'+date_str+'.csv'
+        output_file = 'stars_visible_bright_' + date_str + '.csv'
 
         # Write the extracted data to the CSV file
         with open(output_file, 'w', newline='') as csvfile:
@@ -251,7 +249,6 @@ if magnitude == "y":
                 writer.writerow(row_data)
         print("Saved as", output_file)
     extracted_data = extracted_data2
-
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------

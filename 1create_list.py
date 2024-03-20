@@ -47,12 +47,8 @@ with open('bsc5-all.json', 'r') as file:
     stars_data = json.load(file)
 
 # Sort stars_data based on Vmag (magnitude) in descending order
-stars_data_sorted = sorted(stars_data, key=lambda x: x.get("Vmag", 0), reverse=True)
-
-# Take only the top n stars with the highest magnitude
-n = 1000
-brightest_stars = stars_data_sorted[:n]
-print(brightest_stars)
+n=1000
+brightest_stars = sorted(stars_data, key=lambda x: x['Vmag'])[:n]
 
 # Loop through the top 1000 stars
 for star in brightest_stars:
@@ -96,7 +92,12 @@ for star in brightest_stars:
         temp = float(temp_value)
     else:
         temp = None
+
+
     star_ra_decimal, star_dec_decimal = convert_ra_dec(star["RA"], star["Dec"])
+
+    RA_str = star.get("RA")
+    Dec_str = star.get("Dec")
 
     if temp is not None:
         nu_V = c / lambda_V
@@ -145,6 +146,8 @@ for star in brightest_stars:
         "Temp": temp,
         "RA_decimal": star_ra_decimal,
         "Dec_decimal": star_dec_decimal,
+        "RA": RA_str,
+        "Dec": Dec_str,
         "Diameter_U": diameter_U,
         "Diameter_V": diameter_V,
         "Diameter_B": diameter_B,
@@ -152,7 +155,7 @@ for star in brightest_stars:
 
 # Write data to CSV file
 csv_columns = ["BayerF", "Common", "Parallax", "Distance", "Umag", "Vmag", "Bmag", "Temp", "RA_decimal", "Dec_decimal",
-               "Diameter_U", "Diameter_V", "Diameter_B"]
+               "RA", "Dec", "Diameter_U", "Diameter_V", "Diameter_B"]
 csv_file = str(n)+"stars_data.csv"
 with open(csv_file, 'w') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
