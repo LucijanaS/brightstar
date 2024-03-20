@@ -6,6 +6,9 @@ Created by: Lucijana Stanic
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
+from brightstar_functions import dms_to_decimal, RA_2_HA, R_y, R_x, calculate_covered_area
+from brightstar_input import lat_deg1, utc_offset, date_str
+
 import numpy as np
 import astropy.units as u
 import csv
@@ -14,9 +17,8 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time, TimeDelta
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-import scipy.signal as signal
-from scipy.special import j1, j0
-from scipy.spatial import ConvexHull
+from scipy.special import j1
+
 
 # - * - coding: utf - 8 - * -
 
@@ -43,122 +45,18 @@ with open('stars_visible_2024-05-22.csv', newline='') as csvfile:
             data[column_name].append(item)
 
 
-def dms_to_decimal(dms_str):
-    # Split the string into degrees, minutes, seconds, and direction
-    degrees, minutes, seconds = map(float, dms_str[:-1].split(' '))
 
-    # Extract direction
-    direction = dms_str[-1]
-
-    # Calculate the decimal degrees
-    decimal_degrees = degrees + (minutes / 60.0) + (seconds / 3600.0)
-
-    # Adjust for negative values if direction is South or West
-    if direction in ['S', 'W']:
-        decimal_degrees *= -1
-
-    return decimal_degrees
-
-
-def R_x(a):
-    return np.array([[1, 0, 0],
-                     [0, np.cos(a), -np.sin(a)],
-                     [0, np.sin(a), np.cos(a)]])
-
-
-def R_y(b):
-    return np.array([[np.cos(b), 0, np.sin(b)],
-                     [0, 1, 0],
-                     [-np.sin(b), 0, np.cos(b)]])
-
-
-def RA_2_HA(right_ascension, local_time):
-    """Converts right ascension (in decimal degrees) to hour angle (in decimal degrees) given the observation time (
-    Julian date)."""
-    # Calculate Greenwich Mean Sidereal Time (GMST) at 0h UTC on the given observation date
-    # GMST at 0h on January 1, 2000 (J2000 epoch) is 280.4606°
-    gmst_0h_J2000 = 280.4606
-
-    # Calculate the number of Julian centuries since J2000 epoch
-    T = (local_time - 2451545.0) / 36525.0
-
-    # Calculate the GMST at the given observation time
-    gmst = gmst_0h_J2000 + 360.98564724 * (local_time - 2451545.0) + 0.000387933 * T ** 2 - (T ** 3) / 38710000.0
-
-    # Normalize GMST to the range [0, 360) degrees
-    gmst %= 360.0
-
-    # Calculate the hour angle (HA) in decimal degrees
-    ha = gmst - right_ascension
-
-    # Normalize hour angle to the range [-180, 180) degrees
-    ha = (ha + 180.0) % 360.0 - 180.0
-
-    return float(ha[0])
-
-
-def convert_ra_dec(ra_str, dec_str):
-    ra_parts = ra_str.split(' ')
-    ra_h = int(ra_parts[0][:-1])
-    ra_m = int(ra_parts[1][:-1])
-    ra_s = float(ra_parts[2][:-1])
-    ra_decimal = ra_h + ra_m / 60 + ra_s / 3600
-
-    dec_parts = dec_str.split(' ')
-    dec_d = int(dec_parts[0][:-1])
-    dec_m = int(dec_parts[1][:-1])
-    dec_s = float(dec_parts[2][:-1])
-    dec_decimal = dec_d + dec_m / 60 + dec_s / 3600
-
-    return ra_decimal, dec_decimal
-
-
-def calculate_covered_area(U, V):
-    # Combine U and V coordinates into a single array
-    points = np.column_stack((U, V))
-
-    # Calculate the convex hull of the points
-    hull = ConvexHull(points)
-
-    # Calculate the area of the convex hull
-    area = hull.volume if len(U) > 2 else 0
-
-    return area
+# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 def intensity(b, theta, lambda_):
     input = np.pi * b * theta / lambda_
     B_1 = j1(input)
     return B_1
 
-
-# ---------------------------------------------------------------------
-# ---------------------------------------------------------------------
-
 # Input date and location (either in degrees or decimal values, choose which input to use)
+lat_dec1 = dms_to_decimal(lat_deg1)
 
-date_str = "2024-05-22"
-
-utc_offset = 0
-
-height = 2381.25 * u.m
-
-lat_deg = "28 17 58.8N"  # Telescopio Carlos Sanchez
-lon_deg = "16 30 39.7E"
-
-lat_deg_to_dec = dms_to_decimal(lat_deg)
-lon_deg_to_dec = dms_to_decimal(lon_deg)
-
-lat_dec = 47.3769 * u.deg
-lon_dec = 8.5417 * u.deg
-
-loc_input = 'deg'
-
-if loc_input == 'dec':
-    lat = lat_dec
-    lon = lon_dec
-if loc_input == 'deg':
-    lat = lat_deg_to_dec
-    lon = lon_deg_to_dec
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -234,7 +132,7 @@ for i in tqdm(range(0, n)):
     times = start_time + (end_time - start_time) * np.linspace(0, 1, 97)[:, None]
     for time in times:
         HA_value = RA_2_HA(given_ra_decimal, time.jd)
-        matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat * u.deg))
+        matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat_dec1 * u.deg))
         diff_N = -92.5
         diff_E = -13
         diff_H = 5.5
@@ -249,21 +147,19 @@ for i in tqdm(range(0, n)):
     plt.gca().set_aspect('equal')
     plt.title(data['BayerF'][i])
     intensity_values = intensity(R, diameter_in_rad, wavelength)
-    plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+    #plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
 
-    plt.show()
+    #plt.show()
     A = calculate_covered_area(U, V)
 
     U_per_star.append(U)
     V_per_star.append(V)
     W_per_star.append(W)
     covered_area.append(A)
-    plt.clf()
 
 
 
 
-"""
 
 # Add the new column of data to the dictionary
 data["Area"] = covered_area
@@ -287,6 +183,3 @@ if list_save == "y":
             row_data = [data[key][i] for key in data.keys()]
             writer.writerow(row_data)
     print("Saved as", output_file)
-
-print(max(covered_area))
-"""
