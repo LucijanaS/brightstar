@@ -8,8 +8,6 @@ This code retrieves the most important properties from the "bsc5-all.json" file 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
-import numpy as np
-from scipy.constants import c, h, k, pi
 import json
 import csv
 from brightstar_functions import process_star

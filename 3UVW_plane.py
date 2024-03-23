@@ -6,19 +6,19 @@ Created by: Lucijana Stanic
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
-from brightstar_functions import dms_to_decimal, RA_2_HA, R_y, R_x, calculate_covered_area
-from brightstar_input import lat_deg1, utc_offset, date_str
+from brightstar_functions import dms_to_decimal, RA_2_HA, R_y, R_x, calculate_covered_area, intensity
+from brightstar_input import lat_deg1, utc_offset, date_str, x_E, x_N, x_up
 
-import numpy as np
-import astropy.units as u
 import csv
 from datetime import datetime
-from astropy.coordinates import SkyCoord
-from astropy.time import Time, TimeDelta
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-from scipy.special import j1
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+import astropy.units as u
+from astropy.time import Time, TimeDelta
+from astropy.coordinates import SkyCoord
 
 # - * - coding: utf - 8 - * -
 
@@ -49,14 +49,8 @@ with open('stars_visible_2024-05-22.csv', newline='') as csvfile:
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
-def intensity(b, theta, lambda_):
-    input = np.pi * b * theta / lambda_
-    B_1 = j1(input)
-    return B_1
-
-# Input date and location (either in degrees or decimal values, choose which input to use)
+# Convert coordinates from deg to dec
 lat_dec1 = dms_to_decimal(lat_deg1)
-
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -96,10 +90,11 @@ for i in range(len(data["RA_decimal"])):
 U_per_star = []
 V_per_star = []
 W_per_star = []
+intensity_variation_per_star = []
+intensity_values_per_star = []
 covered_area = []
 # Iterate over each equatorial coordinate
 n = len(equatorial_coords)
-
 
 
 # Create a grid of points
@@ -115,57 +110,61 @@ for i in tqdm(range(0, n)):
     # Get RA and Dec for the current star using its index i
     given_ra_decimal = float(RA[i])
     given_dec_decimal = float(Dec[i])
-    current_diameter_V = float(diameter_V[i][0])
+    current_diameter_V = float(diameter_V[i])
     diameter_in_rad = current_diameter_V/1000 * np.pi / (3600 * 180)
     wavelength = 540*10**-9
     U = []
     V = []
     W = []
+    intensity_variation = []
 
     # Define the time span
     hours_before = 0
     hours_after = 12
     start_time = observation_time_utc - TimeDelta(hours_before * u.hour)
     end_time = observation_time_utc + TimeDelta(hours_after * u.hour)
+    intensity_values = intensity(R, diameter_in_rad, wavelength)
 
     # Calculate altitude and azimuth for each time point
     times = start_time + (end_time - start_time) * np.linspace(0, 1, 97)[:, None]
     for time in times:
         HA_value = RA_2_HA(given_ra_decimal, time.jd)
         matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat_dec1 * u.deg))
-        diff_N = -92.5
-        diff_E = -13
-        diff_H = 5.5
-        h_plane = np.array([[diff_N], [diff_E], [diff_H]])
+        h_plane = np.array([[x_N], [x_E], [x_up]])
         UVW_plane = matrices.dot(h_plane)
 
         U.append(UVW_plane[0][0])
         V.append(UVW_plane[1][0])
         W.append(UVW_plane[2][0])
+        intensity_variation.append(intensity_values[int(UVW_plane[0][0]), int(UVW_plane[1][0])])
 
     plt.plot(U, V, '.')
     plt.gca().set_aspect('equal')
     plt.title(data['BayerF'][i])
     intensity_values = intensity(R, diameter_in_rad, wavelength)
-    #plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+    plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+    plt.colorbar(label='Intensity')
 
-    #plt.show()
+    # plt.show()
+    plt.clf()
     A = calculate_covered_area(U, V)
 
     U_per_star.append(U)
     V_per_star.append(V)
     W_per_star.append(W)
+    intensity_values_per_star.append(intensity_values)
+    intensity_variation_per_star.append(np.round(np.sum(intensity_variation), 4))
     covered_area.append(A)
-
-
-
 
 
 # Add the new column of data to the dictionary
 data["Area"] = covered_area
+data["Intensity Variation"] = intensity_variation_per_star
+
+
 list_save = input("Save as .csv? (y or n) ")
 if list_save == "y":
-    output_file = 'stars_visible_' + date_str + '_area.csv'
+    output_file = 'stars_visible_' + date_str + '.csv'
 
     # Write the extracted data to the CSV file
     with open(output_file, 'w', newline='') as csvfile:
@@ -183,3 +182,15 @@ if list_save == "y":
             row_data = [data[key][i] for key in data.keys()]
             writer.writerow(row_data)
     print("Saved as", output_file)
+
+indices_sorted = sorted(range(len(data['Intensity Variation'])), key=lambda i: data['Intensity Variation'][i], reverse=True)[:10]
+
+for i in indices_sorted:
+    plt.plot(U_per_star[i], V_per_star[i], '.', color='gold', markeredgecolor='black')
+    plt.gca().set_aspect('equal')
+    plt.title(data['BayerF'][i], )
+    plt.imshow(intensity_values_per_star[i], cmap='gray', extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+    plt.colorbar(label='Intensity')
+
+    plt.show()
+    plt.clf()
