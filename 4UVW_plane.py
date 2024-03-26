@@ -27,9 +27,9 @@ from astropy.coordinates import SkyCoord
 
 # Initialize a dictionary to store data from each column
 data = {}
-
+file_name = "stars_visible_"+date_str+".csv"
 # Open the CSV file
-with open('stars_visible_2024-05-22.csv', newline='') as csvfile:
+with open(file_name, newline='') as csvfile:
     reader = csv.reader(csvfile)
     header = next(reader)  # Read the header row
 
@@ -43,8 +43,6 @@ with open('stars_visible_2024-05-22.csv', newline='') as csvfile:
         for idx, item in enumerate(row):
             column_name = header[idx]  # Get the corresponding column name
             data[column_name].append(item)
-
-
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -96,23 +94,22 @@ covered_area = []
 # Iterate over each equatorial coordinate
 n = len(equatorial_coords)
 
-
 # Create a grid of points
 resolution = 300
 size_to_plot = 100
 x = np.linspace(-size_to_plot, size_to_plot, resolution)
 y = np.linspace(-size_to_plot, size_to_plot, resolution)
 X, Y = np.meshgrid(x, y)
-R = np.sqrt(X**2 + Y**2)
+R = np.sqrt(X ** 2 + Y ** 2)
 
-
+print("Determining intensity variations and covered area in UVW-plane for each star in", file_name, "during the night of", date_str)
 for i in tqdm(range(0, n)):
     # Get RA and Dec for the current star using its index i
     given_ra_decimal = float(RA[i])
     given_dec_decimal = float(Dec[i])
     current_diameter_V = float(diameter_V[i])
-    diameter_in_rad = current_diameter_V/1000 * np.pi / (3600 * 180)
-    wavelength = 540*10**-9
+    diameter_in_rad = current_diameter_V / 1000 * np.pi / (3600 * 180)
+    wavelength = 540 * 10 ** -9
     U = []
     V = []
     W = []
@@ -156,15 +153,13 @@ for i in tqdm(range(0, n)):
     intensity_variation_per_star.append(np.round(np.sum(intensity_variation), 4))
     covered_area.append(A)
 
-
 # Add the new column of data to the dictionary
 data["Area"] = covered_area
 data["Intensity Variation"] = intensity_variation_per_star
 
-
-list_save = input("Save as .csv? (y or n) ")
+list_save = "y"
 if list_save == "y":
-    output_file = 'stars_visible_' + date_str + '.csv'
+    output_file = file_name
 
     # Write the extracted data to the CSV file
     with open(output_file, 'w', newline='') as csvfile:
@@ -181,16 +176,36 @@ if list_save == "y":
             # Get the data for each column and write it to the CSV file
             row_data = [data[key][i] for key in data.keys()]
             writer.writerow(row_data)
-    print("Saved as", output_file)
+    print("Added to", output_file)
 
-indices_sorted = sorted(range(len(data['Intensity Variation'])), key=lambda i: data['Intensity Variation'][i], reverse=True)[:10]
+indices_sorted_high = sorted(range(len(data['Intensity Variation'])), key=lambda i: data['Intensity Variation'][i],
+                             reverse=True)[:5]
 
-for i in indices_sorted:
+
+top_stars = input("Show plots of the stars with highest intensity variations? (y/n)")
+if top_stars == "y":
+    for i in indices_sorted_high:
+        plt.plot(U_per_star[i], V_per_star[i], '.', color='gold', markeredgecolor='black')
+        plt.gca().set_aspect('equal')
+        plt.title(data['BayerF'][i], )
+        plt.imshow(intensity_values_per_star[i], cmap='gray',
+               extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+        plt.colorbar(label='Intensity')
+
+        plt.show()
+        plt.clf()
+
+"""
+indices_sorted_low = sorted(range(len(data['Intensity Variation'])), key=lambda i: data['Intensity Variation'][i])[:5]
+
+for i in indices_sorted_low:
     plt.plot(U_per_star[i], V_per_star[i], '.', color='gold', markeredgecolor='black')
     plt.gca().set_aspect('equal')
     plt.title(data['BayerF'][i], )
-    plt.imshow(intensity_values_per_star[i], cmap='gray', extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+    plt.imshow(intensity_values_per_star[i], cmap='gray',
+               extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
     plt.colorbar(label='Intensity')
 
     plt.show()
     plt.clf()
+"""

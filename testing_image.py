@@ -19,7 +19,7 @@ def meshgrid(s, resolution):
 
 
 resolution = 300
-diameter = 0.0001  # in arcseconds
+diameter = 0.00019  # in arcseconds
 diameter_in_rad = diameter * np.pi / (3600 * 180)  # in radians
 diameter_mas = diameter * 1000  # in milliarcseconds
 wavelength = 5.4e-7  # wavelength in meters

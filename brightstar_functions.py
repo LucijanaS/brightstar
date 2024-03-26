@@ -138,13 +138,18 @@ def calculate_covered_area(U, V):
 
     return area
 
+def Phi(mag, wavelength):
+    if mag is not None:
+        nu = c / wavelength
+        return np.round(10 ** (-22.44 - mag / 2.5) / (2 * nu * h), 9)
+    else:
+        return None
 
 def calculate_diameter(mag, wavelength, temp):
     if temp is not None and mag is not None:
         nu = c / wavelength
-        Phi = 10 ** (-22.44 - mag / 2.5) / (2 * nu * h)
         S = (nu ** 2 / c ** 2) / np.exp((h * nu) / (k * temp))
-        area_steradian = Phi / S
+        area_steradian = Phi(mag, wavelength) / S
 
         radius_radians = np.sqrt(area_steradian / (pi))
         diameter_ = (6 / pi) * 60 ** 3 * radius_radians
@@ -181,6 +186,10 @@ def process_star(star):
     diameter_V = calculate_diameter(Vmag, lambda_V, temp)
     diameter_B = calculate_diameter(Bmag, lambda_B, temp)
 
+    Phi_V = Phi(Vmag, lambda_V)
+    Phi_B = Phi(Bmag, lambda_B)
+    Phi_U = Phi(Umag, lambda_U)
+
     return {
         "BayerF": BayerF,
         "Common": common,
@@ -197,6 +206,9 @@ def process_star(star):
         "Diameter_U": diameter_U,
         "Diameter_V": diameter_V,
         "Diameter_B": diameter_B,
+        "Phi_U": Phi_U,
+        "Phi_V": Phi_V,
+        "Phi_B": Phi_B
     }
 
 

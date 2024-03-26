@@ -6,10 +6,10 @@ Created by: Lucijana Stanic
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
-from brightstar_input import lat_deg1, lon_deg1, height1, date_str, x_up, x_E, x_N
+from brightstar_input import lat_deg1, lon_deg1, height1, date_str, x_up, x_E, x_N, utc_offset
 from brightstar_functions import dms_to_decimal, convert_ra_dec, RA_2_HA, R_y, R_x, calculate_covered_area, intensity
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,19 +18,30 @@ import astropy.units as u
 from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 
-
 # - * - coding: utf - 8 - * -
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
-
+"""
 # Given RA and Dec
 given_ra = "16h 27m 01.4s"
 given_dec = "-18° 27′ 23″"
+given_ra_decimal, given_dec_decimal = convert_ra_dec(given_ra, given_dec)
 
 # Given diameter in milliarcsecond
 diameter_mas = 0.19
 diameter_in_rad = diameter_mas / 1000 * np.pi / (3600 * 180)
+"""
+# star_of_interest = input("Star of interest (input row from .csv file):")
+star_of_interest = "α Cygni,Deneb,-0.006,-166.667,1.1,1.25,1.34,9500.0,20.691,45.28,20h 41m 25.9s,+45° 16′ 49″,2.36,2.02,1.96,1.2078e-05,1.5606e-05,1.1758e-05"
+values = star_of_interest.split(',')
+
+BayerF = values[0]
+given_ra_decimal = float(values[8])
+given_dec_decimal = float(values[9])
+diameter_V = float(values[13])
+Phi_V = float(values[16])
+diameter_in_rad = diameter_V / 1000 * np.pi / (3600 * 180)
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -42,16 +53,11 @@ lon = dms_to_decimal(lon_deg1)
 date_obj = datetime.strptime(date_str, '%Y-%m-%d')
 
 # Convert the date object to a Julian date
-utc_offset = 1
 date_JD = date_obj.toordinal() + 1721425 + .33333 - (
         1 / 24) * utc_offset  # added 1/3 such since observations will most likely start at 8pm + offset of timezone
 
 # Create a Time object from the observation time in Julian date
 observation_time_utc = Time(date_JD, format='jd')
-
-
-given_ra_decimal, given_dec_decimal = convert_ra_dec(given_ra, given_dec)
-
 
 equatorial_coords = SkyCoord(given_ra_decimal, given_dec_decimal, unit=(u.hourangle, u.deg), frame='icrs')
 
@@ -87,17 +93,17 @@ time_components = [dt.time().strftime('%H:%M') for dt in datetime_objects]
 plt.scatter(time_components, altitudes, c=azimuths_flat)
 plt.colorbar(label='Azimuth [°]')  # Add color bar indicating azimuth
 plt.xticks(time_components[::16], rotation=0)
-plt.title('Star Trail')
+plt.title(BayerF)
 plt.xlabel('Time')
 plt.ylabel('Altitude [°]')
 plt.ylim(0, 90)
 plt.grid(True)
 plt.show()
+plt.clf()
 
 U = []
 V = []
 W = []
-
 
 # Create a grid of points
 resolution = 300
@@ -105,8 +111,7 @@ size_to_plot = 100
 x = np.linspace(-size_to_plot, size_to_plot, resolution)
 y = np.linspace(-size_to_plot, size_to_plot, resolution)
 X, Y = np.meshgrid(x, y)
-R = np.sqrt(X**2 + Y**2)
-
+R = np.sqrt(X ** 2 + Y ** 2)
 
 for time in times:
     HA_value = RA_2_HA(given_ra_decimal, time.jd)
@@ -119,11 +124,26 @@ for time in times:
     W.append(UVW_plane[2][0])
 
 resolution = 300
-wavelength = (5.4e-7) # wavelength in meters
-wavelength_nm = wavelength *10**9
+wavelength = (5.4e-7)  # wavelength in meters
+wavelength_nm = wavelength * 10 ** 9
 A = calculate_covered_area(U, V)
 intensity_values = intensity(R, diameter_in_rad, wavelength)
-plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower', cmap='gray' )
+plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower',
+           cmap='gray')
 plt.plot(U, V, '.', color='gold', markeredgecolor='black')
+plt.title(BayerF + " diameter: " + str(diameter_V) + " mas\n "
+                                                     "$\Phi$ = " + str(
+    np.round(Phi_V, 7)) + " photons m$^{-2}$ s$^{-1}$ Hz$^{-1}$")
+plt.colorbar(label='Intensity')
 plt.gca().set_aspect('equal')
+plt.show()
+plt.clf()
+
+
+
+plt.plot(time_components, W, ".")
+
+plt.xticks(time_components[::16], rotation=0)
+plt.xlabel('Time')
+plt.ylabel('image in W-plane')
 plt.show()

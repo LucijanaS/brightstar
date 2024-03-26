@@ -35,7 +35,7 @@ data = [process_star(star) for star in brightest_stars]
 
 # Write data to CSV file
 csv_columns = ["BayerF", "Common", "Parallax", "Distance", "Umag", "Vmag", "Bmag", "Temp", "RA_decimal", "Dec_decimal",
-               "RA", "Dec", "Diameter_U", "Diameter_V", "Diameter_B"]
+               "RA", "Dec", "Diameter_U", "Diameter_V", "Diameter_B", "Phi_U", "Phi_V", "Phi_B"]
 csv_file = str(n_brightest_stars)+"stars_data.csv"
 with open(csv_file, 'w') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
