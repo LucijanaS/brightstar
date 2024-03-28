@@ -29,7 +29,7 @@ lon_deg2 = "16 30 39.7W"
 height2 = 2381.25 * u.m
 
 # UTC offset at the location
-utc_offset = 0
+utc_offset = 1
 
 # Day (/Night) of observation
 date_str = "2024-05-22"

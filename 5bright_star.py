@@ -33,7 +33,7 @@ diameter_mas = 0.19
 diameter_in_rad = diameter_mas / 1000 * np.pi / (3600 * 180)
 """
 # star_of_interest = input("Star of interest (input row from .csv file):")
-star_of_interest = "α Cygni,Deneb,-0.006,-166.667,1.1,1.25,1.34,9500.0,20.691,45.28,20h 41m 25.9s,+45° 16′ 49″,2.36,2.02,1.96,1.2078e-05,1.5606e-05,1.1758e-05"
+star_of_interest = "α Boötis,Arcturus,0.09,11.111,2.46,-0.04,1.19,4850.0,14.261,19.183,14h 15m 39.7s,+19° 10′ 57″,9.26,14.02,10.84,3.451e-06,5.1202e-05,1.3499e-05,4456.530301466944,0.0016"
 values = star_of_interest.split(',')
 
 BayerF = values[0]
@@ -116,7 +116,7 @@ R = np.sqrt(X ** 2 + Y ** 2)
 for time in times:
     HA_value = RA_2_HA(given_ra_decimal, time.jd)
     matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat * u.deg))
-    h_plane = np.array([[x_N], [x_E], [x_up]])
+    h_plane = np.array([[x_E], [x_N], [x_up]])
     UVW_plane = matrices.dot(h_plane)
 
     U.append(UVW_plane[0][0])

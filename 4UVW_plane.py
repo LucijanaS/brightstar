@@ -127,7 +127,7 @@ for i in tqdm(range(0, n)):
     for time in times:
         HA_value = RA_2_HA(given_ra_decimal, time.jd)
         matrices = R_x(given_dec_decimal * u.deg).dot(R_y(HA_value * u.deg)).dot(R_x(-lat_dec1 * u.deg))
-        h_plane = np.array([[x_N], [x_E], [x_up]])
+        h_plane = np.array([[x_E], [x_N], [x_up]])
         UVW_plane = matrices.dot(h_plane)
 
         U.append(UVW_plane[0][0])
