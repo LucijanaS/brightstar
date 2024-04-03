@@ -2,6 +2,8 @@
 Created on: 28.02.2023
 Created by: Lucijana Stanic
 
+In case one wants to extract stars with certain values of magnitude, angular diameter, or photon flux, one can run this
+script and input the desired values. Seperate files can then be written.
 """
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------

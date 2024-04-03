@@ -2,6 +2,8 @@
 Created on: 28.02.2023
 Created by: Lucijana Stanic
 
+This scripts runs through the nstars_data.csv and extracts the stars that are visible during a certain night specified
+in brightstar_input.py. These extracted stars are then saved in a csv file stars_visible_yyyy-mm-dd.csv.
 """
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------

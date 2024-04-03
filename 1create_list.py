@@ -2,8 +2,8 @@
 Created on: 28.02.2023
 Created by: Lucijana Stanic
 
-This code retrieves the most important properties from the "bsc5-all.json" file for our purposes and saves them in
-"stars_data.csv"
+This code retrieves the most important properties for our purposes from the "bsc5-all.json" file and saves them in
+"nstars_data.csv" where n is the number of brightest stars that should be extracted (specified in brightstar_input.py).
 """
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------

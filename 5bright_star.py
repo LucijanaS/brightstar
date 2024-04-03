@@ -2,6 +2,8 @@
 Created on: 07.03.2023
 Created by: Lucijana Stanic
 
+By entering a row from one of the bright star files, this script returns two plots for that particular star.
+One plot is its path across the night sky during the chosen night while one shows the UV-path it traces
 """
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -32,8 +34,8 @@ given_ra_decimal, given_dec_decimal = convert_ra_dec(given_ra, given_dec)
 diameter_mas = 0.19
 diameter_in_rad = diameter_mas / 1000 * np.pi / (3600 * 180)
 """
-# star_of_interest = input("Star of interest (input row from .csv file):")
-star_of_interest = "α Boötis,Arcturus,0.09,11.111,2.46,-0.04,1.19,4850.0,14.261,19.183,14h 15m 39.7s,+19° 10′ 57″,9.26,14.02,10.84,3.451e-06,5.1202e-05,1.3499e-05,4456.530301466944,0.0016"
+star_of_interest = input("Star of interest (input row from .csv file):")
+#star_of_interest = "α Boötis,Arcturus,0.09,11.111,2.46,-0.04,1.19,4850.0,14.261,19.183,14h 15m 39.7s,+19° 10′ 57″,9.26,14.02,10.84,3.451e-06,5.1202e-05,1.3499e-05,4456.530301466944,0.0016"
 values = star_of_interest.split(',')
 
 BayerF = values[0]
@@ -107,7 +109,7 @@ W = []
 
 # Create a grid of points
 resolution = 300
-size_to_plot = 100
+size_to_plot = 20
 x = np.linspace(-size_to_plot, size_to_plot, resolution)
 y = np.linspace(-size_to_plot, size_to_plot, resolution)
 X, Y = np.meshgrid(x, y)
@@ -128,7 +130,7 @@ wavelength = (5.4e-7)  # wavelength in meters
 wavelength_nm = wavelength * 10 ** 9
 A = calculate_covered_area(U, V)
 intensity_values = intensity(R, diameter_in_rad, wavelength)
-plt.imshow(intensity_values, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower',
+plt.imshow(intensity_values, norm=None, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower',
            cmap='gray')
 plt.plot(U, V, '.', color='gold', markeredgecolor='black')
 plt.title(BayerF + " diameter: " + str(diameter_V) + " mas\n "
@@ -138,12 +140,3 @@ plt.colorbar(label='Intensity')
 plt.gca().set_aspect('equal')
 plt.show()
 plt.clf()
-
-
-
-plt.plot(time_components, W, ".")
-
-plt.xticks(time_components[::16], rotation=0)
-plt.xlabel('Time')
-plt.ylabel('image in W-plane')
-plt.show()
