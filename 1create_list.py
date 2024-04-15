@@ -27,6 +27,9 @@ lambda_B = 442 * 10 ** (-9)
 with open('bsc5-all.json', 'r') as file:
     stars_data = json.load(file)
 
+# Filter out stars with empty BayerF and Common column
+stars_data = [star for star in stars_data if (star.get('BayerF') != '' and star.get('BayerF') is not None) or
+                                              (star.get('Common') != '' and star.get('Common') is not None)]
 # Sort stars_data based on Vmag (magnitude) in descending order
 brightest_stars = sorted(stars_data, key=lambda x: x['Vmag'])[:n_brightest_stars]
 

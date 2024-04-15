@@ -2,14 +2,20 @@
 Created on: 13.03.2023
 Created by: Lucijana Stanic
 
-This script calculates the UVW-trace for a certain location and time input in brightstar_input.py and determines values
-from that that might be useful in determining which stars could be the best candidates for observations.
+This script calculates the UVW-trace for a certain location and time input in brightstar_input.py and determines
+which stars could be the best candidates for observations. It plots the 6 stars that have the highest spectral photon
+flux and a decent coverage of the squared visibility (meaning that the sum of intensities is at least 1).
+
+Furthermore it adds three additional columns that might help in evaluating the best candidate:
+Intensity sum which is equal to the sum of the intensity at the points crossed in the image plane,
+Intensity Std is equal to the standard deviation of the intensities and
+iIntensity Max-Min which is equal to the maximum value of the intensities subtracted by the minimum value.
 """
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
-from brightstar_functions import dms_to_decimal, RA_2_HA, R_y, R_x, calculate_covered_area, intensity
-from brightstar_input import lat_deg1, utc_offset, date_str, x_E, x_N, x_up
+from brightstar_functions import dms_to_decimal, RA_2_HA, R_y, R_x, calculate_covered_area, visibility
+from brightstar_input import lat_deg1, lon_deg1, height1, utc_offset, date_str, x_E, x_N, x_up
 
 import csv
 from datetime import datetime
@@ -20,7 +26,7 @@ import matplotlib.pyplot as plt
 
 import astropy.units as u
 from astropy.time import Time, TimeDelta
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 
 # - * - coding: utf - 8 - * -
 
@@ -29,7 +35,7 @@ from astropy.coordinates import SkyCoord
 
 # Initialize a dictionary to store data from each column
 data = {}
-file_name = "stars_visible_"+date_str+".csv"
+file_name = "stars_visible_" + date_str + ".csv"
 # Open the CSV file
 with open(file_name, newline='') as csvfile:
     reader = csv.reader(csvfile)
@@ -51,6 +57,7 @@ with open(file_name, newline='') as csvfile:
 
 # Convert coordinates from deg to dec
 lat_dec1 = dms_to_decimal(lat_deg1)
+lon_dec1 = dms_to_decimal(lon_deg1)
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -100,13 +107,14 @@ n = len(equatorial_coords)
 
 # Create a grid of points
 resolution = 300
-size_to_plot = 30
+size_to_plot = np.sqrt(x_E ** 2 + x_N ** 2)
 x = np.linspace(-size_to_plot, size_to_plot, resolution)
 y = np.linspace(-size_to_plot, size_to_plot, resolution)
 X, Y = np.meshgrid(x, y)
 R = np.sqrt(X ** 2 + Y ** 2)
 
-print("Determining intensity variations and covered area in UVW-plane for each star in", file_name, "during the night of", date_str)
+print("Determining intensity variations and covered area in UVW-plane for each star in", file_name,
+      "during the night of", date_str)
 for i in tqdm(range(0, n)):
     # Get RA and Dec for the current star using its index i
     given_ra_decimal = float(RA[i])
@@ -124,7 +132,7 @@ for i in tqdm(range(0, n)):
     hours_after = 12
     start_time = observation_time_utc - TimeDelta(hours_before * u.hour)
     end_time = observation_time_utc + TimeDelta(hours_after * u.hour)
-    intensity_map = intensity(R, diameter_in_rad, wavelength)
+    intensity_map = visibility(R, diameter_in_rad, wavelength)
 
     # Calculate altitude and azimuth for each time point
     times = start_time + (end_time - start_time) * np.linspace(0, 1, 97)[:, None]
@@ -153,7 +161,7 @@ for i in tqdm(range(0, n)):
     V_per_star.append(V)
     W_per_star.append(W)
     intensity_map_per_star.append(intensity_map)
-    intensity_max_min_per_star.append(np.max(intensity_value)-np.min(intensity_value))
+    intensity_max_min_per_star.append(np.max(intensity_value) - np.min(intensity_value))
     intensity_sum_per_star.append(np.round(np.sum(intensity_value), 4))
     intensity_std_per_star.append(np.std(intensity_value))
     covered_area.append(A)
@@ -163,6 +171,77 @@ data["Area"] = covered_area
 data["Intensity Sum"] = intensity_sum_per_star
 data["Intensity Std"] = intensity_std_per_star
 data["Intensity Max-Min"] = intensity_max_min_per_star
+
+# Sort the stars based on a different parameter (e.g., "Intensity Sum")
+indices_sorted = sorted(range(len(data['Phi_V'])), key=lambda i: float(data['Phi_V'][i]), reverse=True)
+
+min_I = 1
+min_phi = 5E-6
+
+# Filter out stars with intensity sum over 0
+filtered_indices = [i for i in indices_sorted if float(data['Intensity Sum'][i]) >= min_I and float(data['Phi_V'][i]) >= min_phi]
+
+# Select the top 6 stars from the filtered list
+top_indices = filtered_indices[:6]
+
+print('The stars with the highest spectral photon flux density and same time good coverage of the squared visibility in the UV plane are:')
+for i in top_indices:
+    if data['Common'][i] is not None:
+        print("Bayer designation:", data['BayerF'][i], "\nCommon:", data['Common'][i], "\nΦ:", data['Phi_V'][i], "photons m⁻² s⁻¹ Hz⁻¹\n")
+    else:
+        print("Bayer designation:", data['BayerF'][i], "\nΦ:", data['Phi_V'][i], "photons m⁻² s⁻¹ Hz⁻¹\n")
+
+# Plot the top 6 stars
+for i in top_indices:
+    plt.plot(U_per_star[i], V_per_star[i], '.', color='gold', markeredgecolor='black')
+    plt.gca().set_aspect('equal')
+    if data['Common'][i] is not None:
+        plt.title(data['Common'][i] + ", diameter: " + str(data['Diameter_V'][i]) + " mas\n " + "$\Phi$: " + str(
+            data['Phi_V'][i]) + " photons m$^{-2}$ s$^{-1}$ Hz$^{-1}$")
+    else:
+        plt.title(data['BayerF'][i] + ", diameter: " + str(data['Diameter_V'][i]) + " mas\n " + "$\Phi$: " + str(
+            data['Phi_V'][i]) + " photons m$^{-2}$ s$^{-1}$ Hz$^{-1}$")
+    plt.imshow(intensity_map_per_star[i], cmap='gray',
+               extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
+    plt.colorbar(label='Intensity')
+
+    plt.show()
+    plt.clf()
+    altitudes = []
+    azimuths = []
+
+    coord = SkyCoord(data['RA'][i], data['Dec'][i], unit=(u.hourangle, u.deg), frame='icrs')
+
+    for time in times:
+        altaz_coords = coord.transform_to(
+            AltAz(obstime=time, location=EarthLocation(lat=lat_dec1, lon=lon_dec1, height=height1)))
+        altitude = altaz_coords.alt
+        azimuth = altaz_coords.az
+        altitudes.append(altitude)
+        azimuths.append(azimuth)
+    # Convert lists to arrays
+    altitudes = np.array(altitudes)
+    azimuths = np.array(azimuths)
+    azimuths_flat = azimuths.flatten()
+    datetime_objects = [Time(time[0]).to_datetime() for time in times]
+
+    # Extract only the time component from datetime objects and convert to string
+    time_components = [dt.time().strftime('%H:%M') for dt in datetime_objects]
+
+    # Plot the trail
+    plt.scatter(time_components, altitudes, c=azimuths_flat)
+    plt.colorbar(label='Azimuth [°]')  # Add color bar indicating azimuth
+    plt.xticks(time_components[::16], rotation=0)
+    if data['Common'][i] is not None:
+        plt.title(data['Common'][i] + " on the " + date_str)
+    else:
+        plt.title(data['BayerF'][i] + " on the " + date_str)
+    plt.xlabel('Time')
+    plt.ylabel('Altitude [°]')
+    plt.ylim(0, 90)
+    plt.grid(True)
+    plt.show()
+    plt.clf()
 
 list_save = "y"
 if list_save == "y":
@@ -185,8 +264,9 @@ if list_save == "y":
             writer.writerow(row_data)
     print("Added to", output_file)
 
+"""
 indices_sorted_high = sorted(range(len(data['Intensity Sum'])), key=lambda i: data['Intensity Max-Min'][i],
-                             reverse=True)[:5]
+                             reverse=True)[:6]
 
 
 #top_stars = input("Show plots of the stars with highest intensity variations? (y/n)")
@@ -204,7 +284,7 @@ if top_stars == "y":
         plt.clf()
 
 
-indices_sorted_low = sorted(range(len(data['Intensity Sum'])), key=lambda i: data['Intensity Max-Min'][i])[:5]
+indices_sorted_low = sorted(range(len(data['Intensity Sum'])), key=lambda i: data['Intensity Max-Min'][i])[:6]
 
 for i in indices_sorted_low:
     plt.plot(U_per_star[i], V_per_star[i], '.', color='gold', markeredgecolor='black')
@@ -216,3 +296,4 @@ for i in indices_sorted_low:
 
     plt.show()
     plt.clf()
+"""

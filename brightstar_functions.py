@@ -44,6 +44,7 @@ lambda_B = 442 * 10 ** (-9)
 
 
 def dms_to_decimal(dms_str):
+    """Converts DMS string of coordinates to a decimal float in degrees"""
     # Split the string into degrees, minutes, seconds, and direction
     degrees, minutes, seconds = map(float, dms_str[:-1].split(' '))
 
@@ -61,6 +62,7 @@ def dms_to_decimal(dms_str):
 
 
 def calculate_covered_area(U, V):
+    """Used to evaluate covered area by the track in the UV-plane"""
     # Combine U and V coordinates into a single array
     points = np.column_stack((U, V))
 
@@ -74,6 +76,7 @@ def calculate_covered_area(U, V):
 
 
 def R_x(a):
+    """Part of a rotation matrix, split into R_x and R_y for better overview of what is happening"""
     return np.array([[1, 0, 0],
                      [0, np.cos(a), -np.sin(a)],
                      [0, np.sin(a), np.cos(a)]])
@@ -111,6 +114,7 @@ def RA_2_HA(right_ascension, local_time):
 
 
 def convert_ra_dec(ra_str, dec_str):
+    """Converts the right ascenscion and declination string into decimal floats"""
     ra_parts = ra_str.split(' ')
     ra_h = int(ra_parts[0][:-1])
     ra_m = int(ra_parts[1][:-1])
@@ -125,20 +129,8 @@ def convert_ra_dec(ra_str, dec_str):
 
     return ra_decimal, dec_decimal
 
-
-def calculate_covered_area(U, V):
-    # Combine U and V coordinates into a single array
-    points = np.column_stack((U, V))
-
-    # Calculate the convex hull of the points
-    hull = ConvexHull(points)
-
-    # Calculate the area of the convex hull
-    area = hull.volume if len(U) > 2 else 0
-
-    return area
-
 def Phi(mag, wavelength):
+    """Determine Phi (spectral photon flux density) as a function of magnitude and wavelength"""
     if mag is not None:
         nu = c / wavelength
         return np.round(10 ** (-22.44 - mag / 2.5) / (2 * nu * h), 9)
@@ -146,6 +138,7 @@ def Phi(mag, wavelength):
         return None
 
 def calculate_diameter(mag, wavelength, temp):
+    """Estimate the diameter of a star based on a magnitude, wavelength and effective temperature"""
     if temp is not None and mag is not None:
         nu = c / wavelength
         S = (nu ** 2 / c ** 2) / np.exp((h * nu) / (k * temp))
@@ -160,6 +153,7 @@ def calculate_diameter(mag, wavelength, temp):
 
 
 def process_star(star):
+    """Extracts the values and parameters needed from the catalogue"""
     BayerF = star.get("BayerF")
     common = star.get("Common")
 
@@ -212,7 +206,8 @@ def process_star(star):
     }
 
 
-def intensity(b, theta, lambda_):
+def visibility(b, theta, lambda_):
+    """The squared visibility, often denoted in papers as |V_12|^2 and equals g**(2)-1"""
     input = np.pi * b * theta / lambda_
-    B_1 = (2 * j1(input) / input) ** 2
-    return B_1
+    I = (2 * j1(input) / input) ** 2
+    return I

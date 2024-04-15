@@ -9,7 +9,7 @@ One plot is its path across the night sky during the chosen night while one show
 # ---------------------------------------------------------------------
 
 from brightstar_input import lat_deg1, lon_deg1, height1, date_str, x_up, x_E, x_N, utc_offset
-from brightstar_functions import dms_to_decimal, convert_ra_dec, RA_2_HA, R_y, R_x, calculate_covered_area, intensity
+from brightstar_functions import dms_to_decimal, convert_ra_dec, RA_2_HA, R_y, R_x, calculate_covered_area, visibility
 
 from datetime import datetime, timedelta
 
@@ -109,7 +109,7 @@ W = []
 
 # Create a grid of points
 resolution = 300
-size_to_plot = 20
+size_to_plot = np.sqrt(x_E**2+x_N**2)
 x = np.linspace(-size_to_plot, size_to_plot, resolution)
 y = np.linspace(-size_to_plot, size_to_plot, resolution)
 X, Y = np.meshgrid(x, y)
@@ -129,13 +129,15 @@ resolution = 300
 wavelength = (5.4e-7)  # wavelength in meters
 wavelength_nm = wavelength * 10 ** 9
 A = calculate_covered_area(U, V)
-intensity_values = intensity(R, diameter_in_rad, wavelength)
+intensity_values = visibility(R, diameter_in_rad, wavelength)
 plt.imshow(intensity_values, norm=None, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower',
            cmap='gray')
 plt.plot(U, V, '.', color='gold', markeredgecolor='black')
 plt.title(BayerF + " diameter: " + str(diameter_V) + " mas\n "
                                                      "$\Phi$ = " + str(
     np.round(Phi_V, 7)) + " photons m$^{-2}$ s$^{-1}$ Hz$^{-1}$")
+plt.xlabel('U [m]')
+plt.ylabel('V [m]')
 plt.colorbar(label='Intensity')
 plt.gca().set_aspect('equal')
 plt.show()
