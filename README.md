@@ -22,11 +22,11 @@ It will use RA and Dec of all stars to determine if a star is visible for most o
 A list of visible stars is then be saved as stars_visible_date.csv file. 
 
 ## 3filter_stars.py
-If the list of candidate stars is still too extensive one can filter out by magnitude, estimated apparent size and spectral photon flux.
-A new csv file will be created if parameters are input.
+If the list of candidate stars is still too extensive one can filter out by magnitude, estimated apparent size and spectral photon flux density.
+A new csv file will be created if parameters specified.
 
 ## 4UVW_plane.py
-For the case where intensity inteferrometry is done at two different locations of known coordinates that were put in brightstar_input.py, one can determine the projection of the star on the UVW-plane during the night. Using the projection together with the intensity pattern in that plane one can determine the stars which would cover the most area in the UVW-plane and the most intensity variation, leading to a more accurate measurement of the diameter of the star. The values will be added to the previous .csv file and the stars with most intensity variations will be plotted.
+For the case where intensity inteferrometry is done at two different locations of known coordinates that were put in brightstar_input.py, one can determine the projection of the star on the UVW-plane during the night. Using the projection together with the squared visibility in that plane one can determine the stars which would cover the most area in the UVW-plane and the most intensity variation, leading to a more accurate measurement of the diameter of the star. The values will be added to the previous .csv file and the stars with most intensity variations will be plotted.
 
 ## 5bright_star.py
 If a suitable star was found, one can use the RA and Dec of that star and the diameter or input the row from an interesting star extracted from the stars_visible_date.csv file and to plot the star's position on the night sky in horizontal coordinates as seen from the observers location. Further it plots the UVW-plane projection for that particular night, star and location together with the intensity pattern.
@@ -37,3 +37,6 @@ Run main.py to run the first 4 python scripts.
 ## brightest_stars.ipynb
 The Jupyter notebook brightest_stars.ipynb explains some of the details of how for example the diameter of the star is
 determined based on its effective temperature and the apparent magnitudes in different wavelengths.
+
+## SNR_test.ipynb
+The Jupyter notebook SNR_test.ipynb is there to experiment with input values of efficiency, spectral photon flux density, electric bandwith from which one can try to estimate what diameter/area and observation time to gather significant results.
