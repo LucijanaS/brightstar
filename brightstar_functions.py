@@ -133,7 +133,7 @@ def Phi(mag, wavelength):
     """Determine Phi (spectral photon flux density) as a function of magnitude and wavelength"""
     if mag is not None:
         nu = c / wavelength
-        return np.round(10 ** (-22.44 - mag / 2.5) / (2 * nu * h), 9)
+        return 10 ** (-22.44 - mag / 2.5) / (2 * nu * h)
     else:
         return None
 
@@ -200,9 +200,9 @@ def process_star(star):
         "Diameter_U": diameter_U,
         "Diameter_V": diameter_V,
         "Diameter_B": diameter_B,
-        "Phi_U": Phi_U,
-        "Phi_V": Phi_V,
-        "Phi_B": Phi_B
+        "Phi_U":  np.round(Phi_U, 9),
+        "Phi_V":  np.round(Phi_V, 9),
+        "Phi_B": np.round(Phi_B, 9)
     }
 
 

@@ -204,7 +204,8 @@ for i in top_indices:
     plt.imshow(intensity_map_per_star[i], cmap='gray',
                extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower')
     plt.colorbar(label='Intensity')
-
+    plt.xlabel('U [m]')
+    plt.xlabel('V [m]')
     plt.show()
     plt.clf()
     altitudes = []
@@ -239,6 +240,18 @@ for i in top_indices:
     plt.xlabel('Time')
     plt.ylabel('Altitude [°]')
     plt.ylim(0, 90)
+    plt.grid(True)
+    plt.show()
+    plt.clf()
+
+    plt.scatter(time_components, W_per_star[i])
+    plt.xticks(time_components[::16], rotation=0)
+    if data['Common'][i] is not None:
+        plt.title(data['Common'][i] + " on the " + date_str+'\n baseline: '+str(np.sqrt(x_E**2+x_N**2+x_up**2)))
+    else:
+        plt.title(data['BayerF'][i] + " on the " + date_str+'\n baseline: '+str(np.sqrt(x_E**2+x_N**2+x_up**2)))
+    plt.xlabel('Time')
+    plt.ylabel('W [m]')
     plt.grid(True)
     plt.show()
     plt.clf()
