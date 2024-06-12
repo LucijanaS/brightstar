@@ -28,3 +28,30 @@ def smooth(S,W):
     M /= ksum
     return M
 
+
+def eclipsed_sphere(sx, sy, rad, f):
+    """
+    Create a 2D representation of an eclipsed sphere.
+
+    Parameters:
+    sx (ndarray): x-coordinates grid.
+    sy (ndarray): y-coordinates grid.
+    rad (float): Radius of the sphere.
+    f (float): Fraction for the eclipse size and position.
+
+    Returns:
+    ndarray: A binary array representing the eclipsed sphere.
+    """
+    # Initialize the array for the sphere
+    sphere = np.zeros_like(sx)
+
+    # Define the main sphere
+    sphere[sx ** 2 + sy ** 2 < rad ** 2] = 1
+
+    # Define the eclipse circle (subtraction)
+    eclipse_radius = f * rad
+    eclipse_center_x = (1 - f) * rad
+    sphere[(sx) ** 2 + sy ** 2 < eclipse_radius ** 2] = 0
+
+    return sphere
+

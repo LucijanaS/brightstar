@@ -1,14 +1,14 @@
 """
-Created on: 27.03.2023
+Created on: 08.05.2023
 Created by: Lucijana Stanic
 Function to determine the UV(W) plot for a certain set of telescopes
 """
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
-from brightstar_functions import dms_to_decimal, convert_ra_dec, RA_2_HA, R_y, R_x, calculate_covered_area, visibility
+from brightstar_functions import dms_to_decimal, RA_2_HA, R_y, R_x
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 import astropy.units as u
 from astropy.time import Time, TimeDelta
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy.coordinates import SkyCoord
 
 
 # ---------------------------------------------------------------------
@@ -33,13 +33,11 @@ telescopes_VERITAS = [
 ]
 
 telescopes_VLT = [
-    {"name": "T1", "latitude": "24 37 39.4S", "longitude": "70 24 17.7W", "height": 1275.893 * u.m},
-    {"name": "T2", "latitude": "24 37 37.7S", "longitude": "70 24 16.8W", "height": 1271.016 * u.m},
-    {"name": "T3", "latitude": "24 37 36.6S", "longitude": "70 24 15.7W", "height": 1267.358 * u.m},
-    {"name": "T4", "latitude": "24 37 37.2S", "longitude": "70 24 13.8W", "height": 1268.273 * u.m},
+    {"name": "T1", "latitude": "24 37 39.4S", "longitude": "70 24 17.7W", "height": 2635 * u.m},
+    {"name": "T2", "latitude": "24 37 37.7S", "longitude": "70 24 16.8W", "height": 2635 * u.m},
+    {"name": "T3", "latitude": "24 37 36.6S", "longitude": "70 24 15.7W", "height": 2635 * u.m},
+    {"name": "T4", "latitude": "24 37 37.2S", "longitude": "70 24 13.8W", "height": 2635 * u.m},
 ]
-
-
 
 
 telescopes = telescopes_VLT
@@ -203,8 +201,9 @@ for i in range(1, n_telescopes + 1):
                      color=plt.gca().lines[-1].get_color())  # Match color with the previous plot
         plotted_labels.add(label)
 
-plt.xlim(-450, 450)
-plt.ylim(-350, 350)
+axis = 300
+plt.xlim(-axis, axis)
+plt.ylim(-axis, axis)
 plt.xlabel("u ($M\lambda$)")
 plt.ylabel("v ($M\lambda$)")
 plt.legend()

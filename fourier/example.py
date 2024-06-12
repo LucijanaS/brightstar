@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 from fourier import grids
-from sources import blob, smooth
+from sources import blob, smooth, crescent, eclipsed_sphere
 from visib import sbright, correldens
 from graphics import draw
 
@@ -16,7 +16,7 @@ lam = 500e-9 # wavelegnth in meters
 sx, sy, x, y = grids(ds, N, lam)
 
 Teff = 1e4
-Tmap = Teff * blob(sx, sy, 3e-9)
+Tmap = Teff * eclipsed_sphere(sx, sy, 3e-9, 1/10)
 Tmap = smooth(Tmap, 3)
 draw(sx, sy, Tmap, 16, 'sky', title='$T_{\\rm eff}$')
 pl.show()
