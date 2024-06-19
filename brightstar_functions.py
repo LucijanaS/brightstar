@@ -200,9 +200,9 @@ def process_star(star):
         "Diameter_U": diameter_U,
         "Diameter_V": diameter_V,
         "Diameter_B": diameter_B,
-        "Phi_U":  np.round(Phi_U, 9),
-        "Phi_V":  np.round(Phi_V, 9),
-        "Phi_B": np.round(Phi_B, 9)
+        "Phi_U":  Phi_U,
+        "Phi_V":  Phi_V,
+        "Phi_B": Phi_B
     }
 
 

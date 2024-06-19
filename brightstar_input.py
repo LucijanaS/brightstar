@@ -84,4 +84,4 @@ date_str = "2024-04-30"
 # ---------------------------------------------------------------------
 
 # How many stars of the brightest stars should be extracted and taken into account?
-n_brightest_stars = 1000
+n_brightest_stars = 10000
