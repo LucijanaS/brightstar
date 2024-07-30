@@ -36,7 +36,7 @@ lon_dec1 = dms_to_decimal(lon_deg1)
 
 
 # Open the CSV file
-with open('1000stars_data.csv', newline='') as csvfile:
+with open('10000stars_data.csv', newline='') as csvfile:
     reader = csv.reader(csvfile)
     header = next(reader)  # Read the header row
 

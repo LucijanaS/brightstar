@@ -34,8 +34,8 @@ given_ra_decimal, given_dec_decimal = convert_ra_dec(given_ra, given_dec)
 diameter_mas = 0.19
 diameter_in_rad = diameter_mas / 1000 * np.pi / (3600 * 180)
 """
-star_of_interest = input("Star of interest (input row from .csv file):")
-star_of_interest = "α Boötis,Arcturus,0.09,11.111,2.46,-0.04,1.19,4850.0,14.261,19.183,14h 15m 39.7s,+19° 10′ 57″,9.26,14.02,10.84,3.451e-06,5.1202e-05,1.3499e-05,4456.530301466944,0.0016"
+#star_of_interest = input("Star of interest (input row from .csv file):")
+star_of_interest = "α Lyrae,Vega,0.123,8.13,0.02,0.03,0.03,10000.0,18.616,38.784,18h 36m 56.3s,+38° 47′ 01″,3.49,3.3,3.28,3.265838132466785e-05,4.800506165352719e-05,3.9293031946035225e-05,514.7474749084323,5.4705,0.005983711136727004,0.021108686715702436"
 values = star_of_interest.split(',')
 
 BayerF = values[0]

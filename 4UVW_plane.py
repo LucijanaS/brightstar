@@ -182,7 +182,7 @@ min_phi = 5E-6
 filtered_indices = [i for i in indices_sorted if float(data['Intensity Sum'][i]) >= min_I and float(data['Phi_V'][i]) >= min_phi]
 
 # Select the top 6 stars from the filtered list
-top_indices = filtered_indices[:6]
+top_indices = filtered_indices[:2]
 
 print('The stars with the highest spectral photon flux density and same time good coverage of the squared visibility in the UV plane are:')
 for i in top_indices:
