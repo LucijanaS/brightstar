@@ -31,8 +31,8 @@ from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 data = {}
 
 # Convert coordinates from deg to dec
-lat_dec1 = dms_to_decimal(lat_deg1)
-lon_dec1 = dms_to_decimal(lon_deg1)
+lat_dec1 = -23.3422040
+lon_dec1 = 16.2249443
 
 
 # Open the CSV file
@@ -88,7 +88,7 @@ altitudes_per_star = []
 azimuths_per_star = []
 
 # Iterate over each equatorial coordinate
-number_of_stars = 1000
+number_of_stars = 50
 print("Searching for stars visible in the night of", date_str)
 for equatorial_coord in tqdm(equatorial_coords[:number_of_stars]):
     # Initialize lists to store altitude and azimuth values for the current star

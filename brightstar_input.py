@@ -20,14 +20,18 @@ import numpy as np
 # Location
 
 # Main observation coordinates, input: "dd mm ss D"
-lat_deg1 = "43 45 03.5N"   # Crete SKINAKAS 1.3
-lon_deg1 = "6 55 16.2E"
-height1 = 1750 * u.m
+#lat_deg1 = "43 45 03.5N"   # Crete SKINAKAS 1.3
+#lon_deg1 = "6 55 16.2E"
+#height1 = 1750 * u.m
 
 # Second observation point to determine path on UVW plane
-lat_deg2 = "43 45 02.9N"  # Crete SKINAKAS 0.6
-lon_deg2 = "6 55 17.2E"
-height2 = 1750 * u.m
+#lat_deg2 = "43 45 02.9N"  # Crete SKINAKAS 0.6
+#lon_deg2 = "6 55 17.2E"
+#height2 = 1750 * u.m
+
+lat_deg1 = "23 20 31.9N"   # gamsburg
+lon_deg1 = "16 13 29.7E"
+height1 = 1750 * u.m
 
 """
 # Main observation coordinates, input: "dd mm ss D"
@@ -52,18 +56,26 @@ height1 = 2176 * u.m
 """
 
 # Convert coordinates to decimal degrees
-lat1 = dms_to_decimal(lat_deg1)
-lon1 = dms_to_decimal(lon_deg1)
-lat2 = dms_to_decimal(lat_deg2)
-lon2 = dms_to_decimal(lon_deg2)
+#lat1 = dms_to_decimal(lat_deg1)
+#lon1 = dms_to_decimal(lon_deg1)
+#lat2 = dms_to_decimal(lat_deg2)
+#lon2 = dms_to_decimal(lon_deg2)
+
+lat1 = 43.75370
+lon1 = 6.92294
+lat2 = 43.75370
+lon2 = 6.92312
+
 
 # Calculate differences
 delta_lat = lat2 - lat1
 delta_lon = lon2 - lon1
-delta_height = height2 - height1
+delta_height = 0.0
 
 # Earth radius (assuming a spherical Earth)
 R = 6371.0 * u.km
+
+
 
 
 
@@ -72,8 +84,8 @@ x_E = np.round(((delta_lon * np.pi / 180.0) * R * np.cos(lat1 * np.pi / 180.0)).
 x_N = np.round((delta_lat * R * np.pi / 180.0).value*1000, 3)
 
 # Difference in height (x_up)
-x_up = delta_height.value
-
+#x_up = delta_height.value
+x_up = 0
 
 """
 x_E = 119
@@ -86,14 +98,14 @@ x_up = 0
 # Time
 
 # UTC offset at the location
-utc_offset = +3
+utc_offset = +2
 
 # Day (/Night) of observation
-date_str = "2024-12-15"
+date_str = "2024-10-15"
 
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
 # How many stars of the brightest stars should be extracted and taken into account?
-n_brightest_stars = 10000
-print(np.sqrt(x_E**2 + x_N**2))
+n_brightest_stars = 100
+#print(np.sqrt(x_E**2 + x_N**2))

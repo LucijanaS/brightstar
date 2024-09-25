@@ -211,3 +211,4 @@ def visibility(b, theta, lambda_):
     input = np.pi * b * theta / lambda_
     I = (2 * j1(input) / input) ** 2
     return I
+

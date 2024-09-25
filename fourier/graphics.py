@@ -6,7 +6,7 @@ mas = 1e-3/(180/np.pi*3600)
 
 # Draws contour map of f (on sky or ground, directed)
 # zoom factor (power of 2 preferred)
-def draw(xc,yc,f,zoom,where,cmap='Greys_r',ceil=None,fceil=None,title=None):
+def draw(xc,yc,f,zoom,where,cmap='seismic',ceil=None,fceil=None,title=None):
     def cen(f):
         N = f.shape[0]
         M = N//(zoom*2)

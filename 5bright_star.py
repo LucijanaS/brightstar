@@ -35,7 +35,7 @@ diameter_mas = 0.19
 diameter_in_rad = diameter_mas / 1000 * np.pi / (3600 * 180)
 """
 #star_of_interest = input("Star of interest (input row from .csv file):")
-star_of_interest = "α Lyrae,Vega,0.123,8.13,0.02,0.03,0.03,10000.0,18.616,38.784,18h 36m 56.3s,+38° 47′ 01″,3.49,3.3,3.28,3.265838132466785e-05,4.800506165352719e-05,3.9293031946035225e-05,514.7474749084323,5.4705,0.005983711136727004,0.021108686715702436"
+star_of_interest = "γ Cassiopeiae,Navi,0.016,62.5,1.24,2.47,2.32,30000.0,0.945,60.717,00h 56m 42.5s,+60° 43′ 00″,0.53,0.44,0.39,1.0616824921819226e-05,5.073258968632882e-06,4.767772686428327e-06"
 values = star_of_interest.split(',')
 
 BayerF = values[0]
@@ -130,6 +130,8 @@ wavelength = (5.4e-7)  # wavelength in meters
 wavelength_nm = wavelength * 10 ** 9
 A = calculate_covered_area(U, V)
 intensity_values = visibility(R, diameter_in_rad, wavelength)
+print(intensity_values.shape)
+print(type(intensity_values))
 plt.imshow(intensity_values, norm=None, extent=(-size_to_plot, size_to_plot, -size_to_plot, size_to_plot), origin='lower',
            cmap='gray')
 plt.plot(U, V, '.', color='gold', markeredgecolor='black')

@@ -20,6 +20,7 @@ def correldens(S,lam):
     c = SI_c
     h = SI_h
     pcoh = np.sum(S)
+    print('Phi = %9.2e' % pcoh)
     pflux = 2*c/lam * pcoh
     mag = -2.5*(np.log10(h*pflux)+22.44)
     print('AB = %5.2f' % mag)
